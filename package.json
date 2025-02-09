@@ -2,7 +2,11 @@
   "name": "code-reader",
   "displayName": "code-reader",
   "description": "code-reader",
-  "version": "0.0.1",
+  "publisher": "adlternative",
+	"license": "MIT",
+	"icon": "media/dep.png",
+
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.96.0"
   },
