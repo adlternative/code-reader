@@ -1,22 +1,27 @@
 // The module 'vscode' contains the VS Code extensibility API
 // Import the module and reference it with the alias vscode in your code below
 import * as vscode from "vscode";
-import { CodeReaderProvider } from "./CodeReaderProvider";
+import { createTreeViews } from "./treeViewProvider/treeViews";
+
+function getWorkspaceRoot(): string | null {
+  if (
+    !vscode.workspace.workspaceFolders ||
+    vscode.workspace.workspaceFolders.length === 0
+  ) {
+    return null;
+  }
+  return vscode.workspace.workspaceFolders[0].uri.fsPath;
+}
 
 export function activate(context: vscode.ExtensionContext) {
-  const rootPath =
-    vscode.workspace.workspaceFolders &&
-    vscode.workspace.workspaceFolders.length > 0
-      ? vscode.workspace.workspaceFolders[0].uri.fsPath
-      : undefined;
+  const rootPath = getWorkspaceRoot();
+  if (!rootPath) {
+    vscode.window.showInformationMessage("No file in empty workspace");
+    return;
+  }
 
-  let codeReaderProvider = new CodeReaderProvider(rootPath);
+  createTreeViews(context, rootPath);
 
-  vscode.window.registerTreeDataProvider("code-reader", codeReaderProvider);
-
-  vscode.commands.registerCommand("codeReaderExplorer.refresh", () =>
-    codeReaderProvider.refresh()
-  );
   // 注册打开文件的命令
   context.subscriptions.push(
     vscode.commands.registerCommand(

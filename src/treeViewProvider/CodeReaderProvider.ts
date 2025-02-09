@@ -15,7 +15,10 @@ export class CodeReaderProvider
   refresh(): void {
     this._onDidChangeTreeData.fire();
   }
-  constructor(private workspaceRoot?: string) {}
+  constructor(
+    private context: vscode.ExtensionContext,
+    private workspaceRoot: string
+  ) {}
 
   getTreeItem(
     element: CodeReaderTreeItem
@@ -30,72 +33,83 @@ export class CodeReaderProvider
     }
 
     if (element) {
-      return Promise.resolve(this.getFiles(element.absolutePath));
+      return Promise.resolve(this.getFiles(element.relativeFilePath));
     } else {
-      return Promise.resolve(this.getFiles(this.workspaceRoot));
+      return Promise.resolve(this.getFiles("/"));
     }
   }
 
-  private getFiles(dir: string): CodeReaderTreeItem[] {
+  private getFiles(relativeDirPath: string): CodeReaderTreeItem[] {
+    let dir = path.join(this.workspaceRoot, relativeDirPath);
+
     if (!fs.existsSync(dir)) {
       vscode.window.showInformationMessage(`${dir} does not exist`);
       return [];
     }
 
-    const files: string[] = fs.readdirSync(dir);
+    const files: fs.Dirent[] = fs.readdirSync(dir, { withFileTypes: true });
     if (files.length === 0) {
       vscode.window.showInformationMessage("No files found in test directory");
       return [];
     }
+    const directories: fs.Dirent[] = [];
+    const filesOnly: fs.Dirent[] = [];
 
-    // 分离目录和文件
-    const directories = files.filter(
-      (file) =>
-        fs.lstatSync(path.join(dir, file)).isDirectory() && file !== ".git"
-    );
-    const filesOnly = files.filter(
-      (file) => !fs.lstatSync(path.join(dir, file)).isDirectory()
-    );
+    files.forEach((file) => {
+      if (file.isDirectory() && file.name !== ".git") {
+        directories.push(file);
+      } else {
+        filesOnly.push(file);
+      }
+    });
 
-    // 按字典序排序
-    directories.sort();
-    filesOnly.sort();
+    // 按名称排序
+    directories.sort((a, b) => a.name.localeCompare(b.name));
+    filesOnly.sort((a, b) => a.name.localeCompare(b.name));
 
     // 合并并创建 TreeItem 对象
     return [...directories, ...filesOnly].map((file) => {
-      const filePath = path.join(dir, file);
-      const stat = fs.lstatSync(filePath);
+      let relativeFilePath = path.join(relativeDirPath, file.name);
+
       return new CodeReaderTreeItem(
-        file,
-        filePath,
-        stat.isDirectory()
-          ? vscode.TreeItemCollapsibleState.Collapsed
-          : vscode.TreeItemCollapsibleState.None,
-        stat.isDirectory()
+        file.name,
+        relativeFilePath,
+        file.isDirectory(),
+        this.workspaceRoot,
+        this.context.workspaceState.get(relativeFilePath, false)
       );
     });
   }
 }
 
-class CodeReaderTreeItem extends vscode.TreeItem {
+export class CodeReaderTreeItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
-    public readonly absolutePath: string,
-    public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-    public readonly isDirectory: boolean
+    public readonly relativeFilePath: string,
+    public readonly isDirectory: boolean,
+    public readonly workspaceRoot: string,
+    public readonly checked: boolean
   ) {
-    super(label, collapsibleState);
+    super(
+      label,
+      isDirectory
+        ? vscode.TreeItemCollapsibleState.Collapsed
+        : vscode.TreeItemCollapsibleState.None
+    );
     this.tooltip = `${this.label}`;
     this.description = false;
     this.iconPath = isDirectory
       ? vscode.ThemeIcon.Folder
       : vscode.ThemeIcon.File;
 
+    this.checkboxState = checked
+      ? vscode.TreeItemCheckboxState.Checked
+      : vscode.TreeItemCheckboxState.Unchecked;
     if (!this.isDirectory) {
       this.command = {
         command: "codeReaderExplorer.openFile",
         title: "打开文件",
-        arguments: [this.absolutePath],
+        arguments: [path.join(workspaceRoot, this.relativeFilePath)],
       };
     }
   }
