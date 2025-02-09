@@ -12,10 +12,18 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "views": {
+      "explorer": [
+        {
+          "id": "code-reader",
+          "name": "code reader"
+        }
+      ]
+    },
     "commands": [
       {
-        "command": "code-reader.helloWorld",
-        "title": "Hello World"
+        "command": "codeReaderExplorer.refresh",
+        "title": "Refresh CodeReader Explorer"
       }
     ]
   },
