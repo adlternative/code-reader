@@ -71,7 +71,7 @@ export class CodeReaderProvider
         stat.isDirectory()
           ? vscode.TreeItemCollapsibleState.Collapsed
           : vscode.TreeItemCollapsibleState.None,
-        stat.isDirectory() ? "directory" : "file"
+        stat.isDirectory()
       );
     });
   }
@@ -82,15 +82,21 @@ class CodeReaderTreeItem extends vscode.TreeItem {
     public readonly label: string,
     public readonly absolutePath: string,
     public readonly collapsibleState: vscode.TreeItemCollapsibleState,
-    public readonly fileType: string
+    public readonly isDirectory: boolean
   ) {
     super(label, collapsibleState);
     this.tooltip = `${this.label}`;
     this.description = false;
-    this.iconPath =
-      fileType === "directory"
-        ? vscode.ThemeIcon.Folder
-        : vscode.ThemeIcon.File;
-    this.contextValue = fileType;
+    this.iconPath = isDirectory
+      ? vscode.ThemeIcon.Folder
+      : vscode.ThemeIcon.File;
+
+    if (!this.isDirectory) {
+      this.command = {
+        command: "codeReaderExplorer.openFile",
+        title: "打开文件",
+        arguments: [this.absolutePath],
+      };
+    }
   }
 }

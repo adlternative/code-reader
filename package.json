@@ -24,6 +24,10 @@
       {
         "command": "codeReaderExplorer.refresh",
         "title": "Refresh CodeReader Explorer"
+      },
+      {
+        "command": "codeReaderExplorer.openFile",
+        "title": "Open File"
       }
     ]
   },

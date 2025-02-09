@@ -17,6 +17,22 @@ export function activate(context: vscode.ExtensionContext) {
   vscode.commands.registerCommand("codeReaderExplorer.refresh", () =>
     codeReaderProvider.refresh()
   );
+  // 注册打开文件的命令
+  context.subscriptions.push(
+    vscode.commands.registerCommand(
+      "codeReaderExplorer.openFile",
+      (filePath: string) => {
+        vscode.workspace.openTextDocument(filePath).then(
+          (doc) => {
+            vscode.window.showTextDocument(doc);
+          },
+          (err) => {
+            vscode.window.showErrorMessage(`打开文件失败: ${err}`);
+          }
+        );
+      }
+    )
+  );
 }
 
 // This method is called when your extension is deactivated
