@@ -12,6 +12,12 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsWelcome": [
+      {
+        "view": "code-reader",
+        "contents": "Two great things here: 1. Chat with other developers 2. Mark Code as Read/Unread"
+      }
+    ],
     "viewsContainers": {
       "activitybar": [
         {
