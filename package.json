@@ -12,8 +12,17 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "code-reader-container",
+          "title": "Code Reader",
+          "icon": "media/dep.svg"
+        }
+      ]
+    },
     "views": {
-      "explorer": [
+      "code-reader-container": [
         {
           "id": "code-reader",
           "name": "code reader"
