@@ -4,6 +4,8 @@ All notable changes to the "code-reader" extension will be documented in this fi
 
 Check [Keep a Changelog](http://keepachangelog.com/) for recommendations on how to structure this file.
 
-## [Unreleased]
+## [v0.0.1] - 2025-02-10
 
-- Initial release
+### Added
+
+- Implemented the **read/unread** feature for files in the Visual Studio Code workspace
