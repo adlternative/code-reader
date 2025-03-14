@@ -15,16 +15,18 @@ export function createTreeViews(
     manageCheckboxStateManually: true,
   });
   tasksView.onDidChangeCheckboxState((e) => {
-    onDidChangeCheckboxState(context, e);
+    onDidChangeCheckboxState(context, e, codeReaderProvider);
   });
 }
 
 async function onDidChangeCheckboxState(
   context: vscode.ExtensionContext,
-  e: vscode.TreeCheckboxChangeEvent<CodeReaderTreeItem>
+  e: vscode.TreeCheckboxChangeEvent<CodeReaderTreeItem>,
+  codeReaderProvider?: CodeReaderProvider
 ) {
   for (const item of e.items) {
-    const relativeFilePath = item[0].relativeFilePath;
+    const treeItem = item[0];
+    const relativeFilePath = treeItem.relativeFilePath;
     const stateValue = item[1];
     // Interpret state: 1 means read (true), 0 means unread (false)
     const isRead = stateValue === 1;
@@ -35,5 +37,39 @@ async function onDidChangeCheckboxState(
     console.log(
       `File: ${relativeFilePath} is marked as ${isRead ? "read" : "unread"}`
     );
+
+    // If the item is a directory, recursively update all child items
+    if (treeItem.isDirectory && codeReaderProvider) {
+      await updateChildItems(context, treeItem, isRead, codeReaderProvider);
+    }
+  }
+  
+  // Final refresh to ensure all UI changes are reflected
+  if (codeReaderProvider) {
+    codeReaderProvider.refresh();
+  }
+}
+
+// Helper function to recursively update all child items
+async function updateChildItems(
+  context: vscode.ExtensionContext,
+  parentItem: CodeReaderTreeItem,
+  isRead: boolean,
+  codeReaderProvider: CodeReaderProvider
+) {
+  const childItems = await codeReaderProvider.getChildren(parentItem);
+  for (const childItem of childItems) {
+    await context.workspaceState.update(childItem.relativeFilePath, isRead);
+    console.log(
+      `Child item: ${childItem.relativeFilePath} is marked as ${isRead ? "read" : "unread"}`
+    );
+    
+    // Recursively update children of directories
+    if (childItem.isDirectory) {
+      await updateChildItems(context, childItem, isRead, codeReaderProvider);
+    }
+    
+    // Refresh the tree view after each item update to ensure UI reflects changes immediately
+    codeReaderProvider.refresh();
   }
 }
