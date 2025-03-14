@@ -43,6 +43,11 @@ async function onDidChangeCheckboxState(
       await updateChildItems(context, treeItem, isRead, codeReaderProvider);
     }
   }
+  
+  // Final refresh to ensure all UI changes are reflected
+  if (codeReaderProvider) {
+    codeReaderProvider.refresh();
+  }
 }
 
 // Helper function to recursively update all child items
@@ -63,5 +68,8 @@ async function updateChildItems(
     if (childItem.isDirectory) {
       await updateChildItems(context, childItem, isRead, codeReaderProvider);
     }
+    
+    // Refresh the tree view after each item update to ensure UI reflects changes immediately
+    codeReaderProvider.refresh();
   }
 }
